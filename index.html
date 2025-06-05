@@ -1,0 +1,173 @@
+<!-- File: templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delhi: Past to Present</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='libs/scrollreveal.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='libs/chart.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='libs/anime.min.js') }}"></script>
+</head>
+<body>
+    {% block content %}{% endblock %}
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+</body>
+</html>
+
+
+<!-- File: templates/index.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="section" id="intro">
+    <h1>Delhi: From Past to Present</h1>
+    <p>Discover the incredible transformation of Delhi over 1000 years — from ancient empires to modern megacity.</p>
+</div>
+
+<div class="section" id="ancient-delhi">
+    <h2>Ancient Delhi</h2>
+    <p>Once known as Indraprastha in Mahabharata, Delhi's earliest settlements trace back to 6th century BCE.</p>
+</div>
+
+<div class="section" id="mughal-era">
+    <h2>Mughal Delhi</h2>
+    <p>Delhi flourished under Mughal rule — Shahjahanabad became the capital, now known as Old Delhi.</p>
+</div>
+
+<div class="section" id="british-delhi">
+    <h2>British Raj & New Delhi</h2>
+    <p>In 1911, the British moved their capital from Calcutta to Delhi, designing Lutyens' Delhi as a symbol of empire.</p>
+</div>
+
+<div class="section" id="modern-delhi">
+    <h2>Modern Delhi</h2>
+    <p>Post-independence saw urban expansion, population explosion, and modernization — but also new challenges.</p>
+</div>
+
+<div class="section" id="dda-mcd">
+    <h2>DDA & MCD Governance</h2>
+    <p>DDA (since 1957) and MCD (since 1958) have led housing, planning, and municipal development. Still, infrastructure struggles remain.</p>
+</div>
+
+<div class="section" id="problems-stats">
+    <h2>Present-Day Challenges</h2>
+    <canvas id="airChart" width="600" height="400"></canvas>
+    <canvas id="crimeChart" width="600" height="400"></canvas>
+</div>
+
+<div class="section" id="future-vision">
+    <h2>Delhi's Future</h2>
+    <p>Smart city initiatives, metro expansion, clean energy, and sustainable water supply aim to redefine Delhi's next century.</p>
+</div>
+{% endblock %}
+
+
+// File: static/js/charts.js
+document.addEventListener("DOMContentLoaded", function () {
+    fetch("/api/data")
+        .then(response => response.json())
+        .then(data => {
+            const airCtx = document.getElementById('airChart').getContext('2d');
+            new Chart(airCtx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(data.air_quality),
+                    datasets: [{
+                        label: 'Air Quality Index (AQI)',
+                        data: Object.values(data.air_quality),
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2
+                    }]
+                }
+            });
+
+            const crimeCtx = document.getElementById('crimeChart').getContext('2d');
+            new Chart(crimeCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data.crime_rate),
+                    datasets: [{
+                        label: 'Crime Incidents',
+                        data: Object.values(data.crime_rate),
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                }
+            });
+        });
+});
+
+
+// File: static/js/script.js
+ScrollReveal().reveal('.section', { delay: 200, distance: '50px', origin: 'bottom' });
+
+
+/* File: static/css/style.css */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f4f4f4;
+    color: #333;
+}
+.section {
+    padding: 100px 60px;
+    border-bottom: 1px solid #ccc;
+    background: white;
+}
+h1, h2 {
+    color: #1e3a5f;
+}
+canvas {
+    margin: 40px auto;
+    display: block;
+}
+
+
+// File: app.py
+from flask import Flask, render_template, jsonify
+import json
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return render_template("index.html")
+
+@app.route('/api/data')
+def api_data():
+    with open("data/delhi_stats.json") as f:
+        stats = json.load(f)
+    return jsonify(stats)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+# File: data/delhi_stats.json
+{
+  "air_quality": {
+    "2000": 150,
+    "2005": 180,
+    "2010": 220,
+    "2015": 260,
+    "2020": 290,
+    "2024": 310
+  },
+  "crime_rate": {
+    "2000": 1000,
+    "2005": 1700,
+    "2010": 2500,
+    "2015": 3200,
+    "2020": 3800,
+    "2024": 4100
+  }
+}
+
+
+# File: requirements.txt
+flask
